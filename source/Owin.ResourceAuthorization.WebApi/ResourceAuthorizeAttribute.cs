@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 
@@ -51,14 +52,25 @@ namespace Thinktecture.IdentityModel.WebApi
 
         protected virtual bool CheckAccess(HttpRequestMessage request, Claim[] actions, params Claim[] resources)
         {
-            var task = request.CheckAccessAsync(actions, resources);
+            return AsyncHelper.RunSync(() => CheckAccessAsync(request, actions, resources));
+        }
 
-            if (task.Wait(5000))
+        private async Task<bool> CheckAccessAsync(HttpRequestMessage request, Claim[] actions, params Claim[] resources)
+        {
+            var task = request.CheckAccessAsync(actions, resources);
+            if (await Task.WhenAny(task, Task.Delay(5000)).ConfigureAwait(false) == task)
             {
-                return task.Result;
+                // Task completed within timeout.
+
+                // The task may have faulted or been cancelled.
+                // We re-await the task so that any exceptions/cancellation is rethrown.
+                var result = await task.ConfigureAwait(false);
+
+                return result;
             }
             else
             {
+                // timeout logic
                 throw new TimeoutException();
             }
         }
