@@ -48,6 +48,7 @@ namespace Thinktecture.IdentityModel.Mvc
             }
         }
 
+		[Obsolete("Use 'Action' and 'Resource' parameters")]
         public new string Roles
         {
             get
@@ -59,7 +60,8 @@ namespace Thinktecture.IdentityModel.Mvc
                 throw new NotSupportedException();
             }
         }
-
+        
+		[Obsolete("Use 'Action' and 'Resource' parameters")]
         public new string Users 
         { 
             get 
